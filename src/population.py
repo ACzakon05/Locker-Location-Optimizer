@@ -3,7 +3,7 @@ import numpy as np
 
 class PopulationData:
     def __init__(self, raster_path):
-        self.dataset=resterio.open(raster_path)
+        self.dataset=rasterio.open(raster_path)
 
     def get_population(self, lat, lon):
         try:
