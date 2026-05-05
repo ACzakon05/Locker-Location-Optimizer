@@ -39,11 +39,18 @@ def create_map(lockers_df, recommendations, bbox):
             </table>
             """
             popup = folium.Popup(html, max_width=300)
+            # Add marker for the best location
+            rec_icon = folium.Icon(icon='star', prefix='fa', color='red')
+            folium.Marker(
+                location=[row["lat"], row["lon"]],
+                icon=rec_icon,
+                tooltip=f"Score: {row['score']:.2f}"
+            ).add_to(m)
             folium.Circle(
                 location=[row["lat"], row["lon"]],
                 # 'radius' w folium.Circle podajemy w METRACH
                 # Teraz kółko będzie miało np. 400 metrów promienia na ziemi
-                radius=400 + (row.get("score", 0) * 200), 
+                radius=200 + (row.get("score", 0) * 100), 
                 color="red",
                 fill=True,
                 fill_opacity=0.3,

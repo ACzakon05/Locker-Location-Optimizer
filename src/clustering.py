@@ -13,5 +13,5 @@ def cluster_points(df):
     df["cluster"]=db.labels_
 
 
-    #return df.groupby("cluster").mean(numeric_only=True).reset_index()
-    return df.loc[df.groupby("cluster")["score"].idxmax()]  
+    return df.groupby("cluster").mean(numeric_only=True).reset_index()
+    #return df.loc[df.groupby("cluster")["score"].idxmax()]  

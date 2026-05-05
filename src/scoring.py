@@ -11,9 +11,9 @@ def compute_scores(df):
     df["raw_gap"]=1/ (1+ df["locker_density"])
     df[[f"{c}_norm" for c in cols_to_scale]] = scaler.fit_transform(df[cols_to_scale])
     df["score"] = (
-        df["population_norm"] * 
-        df["distance_norm"] * 
-        df["raw_gap_norm"]
+        0.7 * df["population_norm"] + 
+        0.2 * df["distance_norm"] + 
+        0.1 * df["raw_gap_norm"]
     )
     return df
 
