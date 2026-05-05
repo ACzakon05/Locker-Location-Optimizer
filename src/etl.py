@@ -1,33 +1,52 @@
-#extract, transform, load
-
 import requests
 import pandas as pd
 
-API_URL = "https://api-global-points.easypack24.net/v1/points"
-
 def fetch_lockers(bbox):
-    params={
+    url = "https://api-global-points.easypack24.net/v1/points"
+    
+    # Przekazujemy parametry do API, aby szukało w odpowiednim obszarze
+    params = {
+        "relative_to": f"{bbox[0]},{bbox[1]}",
+        "radius": 50000,
+        "per_page": 1000,
+        "status": "Operating",
         "type": "parcel_locker",
-        "per_page": 500,
-        "page": 1
+        "country": "PL"
     }
 
-    all_points=[]
-
-    while True:
-        response=requests.get(API_URL, params=params)
-        data=response.json()
-        if "items" not in data:
-            break
+    try:
+        all_items = []
+        page = 1
+        while True:
+            params["page"] = page
+            res = requests.get(url, params=params, timeout=10)
+            data = res.json()
+            items = data.get("items", [])
+            all_items.extend(items)
+            total_pages = data.get("total_pages", 1)
+            if page >= total_pages:
+                break
+            page += 1
         
-        for item in data["items"]:
-            lat=item["location"]["latitude"]
-            lon=item["location"]["longitude"]
+        # Zawsze zwracamy DataFrame z zadanymi kolumnami, nawet jeśli jest pusty
+        cols = ["lat", "lon", "name"]
+        if not all_items:
+            return pd.DataFrame(columns=cols)
 
-            if bbox[0]<=lat <= bbox[2] and bbox[1]<=bbox[3]:
-                all_points.append((lat,lon))
+        df = pd.DataFrame(all_items)
+        
+        # Wyciąganie współrzędnych z zagnieżdżonego słownika location
+        df["lat"] = df["location"].apply(lambda x: x["latitude"])
+        df["lon"] = df["location"].apply(lambda x: x["longitude"])
+        
+        # Filtrowanie do dokładnego BBOX
+        df = df[
+            (df["lat"] >= bbox[0]) & (df["lat"] <= bbox[2]) &
+            (df["lon"] >= bbox[1]) & (df["lon"] <= bbox[3])
+        ]
 
-        if not data.get("meta", {}).get("has_next_page"):
-            break
-        params["page"]+=1
-    return pd.DataFrame(all_points, colums=["lat","lon"])
+        return df[cols] if not df.empty else pd.DataFrame(columns=cols)
+        
+    except Exception as e:
+        print(f"API Connection Error: {e}")
+        return pd.DataFrame(columns=["lat", "lon", "name"])

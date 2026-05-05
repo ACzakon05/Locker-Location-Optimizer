@@ -7,12 +7,16 @@ from src.scoring import compute_scores, filter_candidates
 from src.clustering import cluster_points
 from src.config import *
 
-def pipeline(bbox):
-    lockers_df=fetch_lockers(bbox)
+def pipeline(expanded_bbox, original_bbox):
+    lockers_df = fetch_lockers(expanded_bbox)
+    print(f"DEBUG: Znaleziono {len(lockers_df)} paczkomatów") # To zobaczysz w terminalu
+    
     if lockers_df.empty:
-        return None,None,None
-    grid_df= generate_grid(bbox,spacing_m=GRID_SPACING_METERS)
-
+        return None, None, None
+    grid_df = generate_grid(original_bbox, spacing_m=GRID_SPACING_METERS)
+    print(f"DEBUG: Wygenerowano {len(grid_df)} punktów siatki")
+    
+    # ... reszta kodu
     pop=PopulationData("data/population.tif")
 
     grid_df["population"]=grid_df.apply(
