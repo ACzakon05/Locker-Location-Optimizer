@@ -264,7 +264,6 @@ AI tools (ChatGPT) were used as technical support during development.
 
 They helped with:
 
-* refining the project structure
 * clarifying geospatial concepts, especially distance calculations (Haversine, radians)
 * improving the Streamlit UI and interaction logic
 
