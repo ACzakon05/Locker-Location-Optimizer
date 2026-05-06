@@ -181,13 +181,13 @@ The map includes:
 
 ### Demo
 
-#### Interfejs użytkownika
+#### User interface
 ![Interfejs](photos/Interfejs.png)
 
-#### Mapa wyników
+#### Result Map
 ![Mapa](photos/Map.png)
 
-#### Mapa wraz z Legendą
+#### Map with legend
 ![Legenda](photos/Map_Legend.png)
 
 
