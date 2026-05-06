@@ -28,7 +28,7 @@ Aplikacja implementuje kompletny pipeline analizy danych przestrzennych — od p
 4. Generowana jest siatka punktów (~400 m)
 5. Każdy punkt siatki jest wzbogacany o:
 
-   * liczbę mieszkańców (z rastra GeoTIFF)
+   * liczbę mieszkańców na podstawie danych rastrowych (GeoTIFF, np. WorldPop)
    * odległość do najbliższego paczkomatu
    * lokalną gęstość paczkomatów (w promieniu 1 km)
 6. Obliczany jest wynik (score)
