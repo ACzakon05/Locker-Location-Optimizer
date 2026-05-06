@@ -182,11 +182,16 @@ Mapa zawiera:
 
 ### Demo
 
+#### Interfejs użytkownika
+![Interfejs](photos/Interfejs.png)
 
+#### Mapa wyników
+![Mapa](photos/Map.png)
 
+#### Mapa wraz z Legendą
+![Legenda](photos/Map_Legend.png)
 
 ---
-
 ## Technologies
 
 * **Python 3.10+**
