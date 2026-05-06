@@ -238,21 +238,23 @@ streamlit run app.py
 ---
 
 ## What I would do with more time
-
-zastąpienie heurystycznego scoringu modelem uczącym się (np. Gradient Boosting / XGBoost)
-rozbudowa feature engineering o interakcje przestrzenne (density decay, distance transforms, non-linear saturation effects) zamiast liniowych wag
-integracja danych kontekstowych (POI, transport, gęstość ruchu) w celu modelowania rzeczywistego popytu i dostępności
-kalibracja modelu na danych historycznych (np. istniejące lokalizacje i ich wykorzystanie) zamiast ręcznie dobranych wag
+- zastąpienie heurystycznego scoringu modelem uczącym się (np. Gradient Boosting / XGBoost)
+- dostosowanie modelu do warunków miejskich i poza miejsckich ( inne wagi cech )
+- rozszerzenie o większą liczbę miast
+- możliwość sprawdzenia danego obszaru np: kraju, województwa, powiatu, gminy z danych GIS
+- lepszy interfejs użytkownika
+- integracja danych kontekstowych (POI, transport, gęstość ruchu) w celu modelowania rzeczywistego popytu i dostępności
+- kalibracja modelu na danych historycznych (np. istniejące lokalizacje i ich wykorzystanie) zamiast ręcznie dobranych wag
 
 ## AI usage
 Narzędzia AI (ChatGPT) były wykorzystywane jako wsparcie techniczne w trakcie tworzenia projektu.
 Pomogły w:
 
-dopracowaniu struktury projektu oraz architektury pipeline’u
-wyjaśnieniu zagadnień geograficznych, w szczególności obliczania odległości (Haversine, praca na radianach)
-ulepszeniu interfejsu użytkownika w Streamlit i logiki jego działania
+- dopracowaniu struktury projektu
+- wyjaśnieniu zagadnień geograficznych, w szczególności obliczania odległości (Haversine, praca na radianach)
+- ulepszeniu interfejsu użytkownika w Streamlit i logiki jego działania
 
 Wszystkie sugestie zostały zweryfikowane, dostosowane i zaimplementowane ręcznie, aby zapewnić poprawność oraz spójność całego systemu.
 
 ## Anything else?
-TODO
+Moim zdaniem, świetny pomysł na etap rekrutacji. Mam nadzieję że moja inicjatywa się Państwu spodoba. Z niecierpliwością czekam na odpowiedź i o Państwa zdaniu na temat tego projektu. Marzeniem byłoby pracować nad jednym z podobnych rozwiązań w Państwa firmie. Dziękuję za możliwość wykazania się.
