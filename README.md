@@ -1,101 +1,99 @@
-
 # Locker Location Optimizer
 
-## Autor
+## Author
 
-* **Imię i nazwisko:** Adam Czakon
+* **Name:** Adam Czakon
 * **Email:** czakonadam@gmail.com
 
 ---
 
 ## Overview
 
-Locker Location Optimizer to aplikacja do analizy przestrzennej, której celem jest wyznaczanie optymalnych lokalizacji dla nowych paczkomatów w miastach. System łączy rzeczywiste dane o istniejących punktach z informacjami o gęstości zaludnienia i analizą odległości.
+Locker Location Optimizer is a geospatial analysis application designed to identify optimal locations for new parcel lockers in urban areas. The system combines real-world data on existing locker locations with population density and distance-based analysis.
 
-Projekt odpowiada na praktyczne pytanie biznesowe: *gdzie należy postawić nowe paczkomaty, aby maksymalizować dostępność dla użytkowników, jednocześnie unikając nadmiernego zagęszczenia infrastruktury?*
+The project addresses a practical business question: *where should new parcel lockers be placed to maximize accessibility for users while avoiding excessive infrastructure saturation?*
 
 ---
 
 ## Demo & Description
 
-Aplikacja implementuje kompletny pipeline analizy danych przestrzennych — od pobrania danych, przez ich przetworzenie, aż po wizualizację wyników.
+The application implements a complete geospatial data analysis pipeline — from data acquisition, through processing, to result visualization.
 
-### Jak działa system
+### How the system works
 
-1. Użytkownik wybiera miasto z listy
-2. System pobiera rzeczywiste lokalizacje paczkomatów z API InPost
-3. Tworzony jest powiększony bounding box (expanded bbox), aby uwzględnić okolice miasta
-4. Generowana jest siatka punktów (~400 m)
-5. Każdy punkt siatki jest wzbogacany o:
+1. The user selects a city from a list
+2. The system fetches real parcel locker locations from the InPost API
+3. An expanded bounding box is created to include surrounding areas
+4. A spatial grid (~400 m resolution) is generated
+5. Each grid point is enriched with:
 
-   * liczbę mieszkańców na podstawie danych rastrowych (GeoTIFF, np. WorldPop)
-   * odległość do najbliższego paczkomatu
-   * lokalną gęstość paczkomatów (w promieniu 1 km)
-6. Obliczany jest wynik (score)
-7. Dane są filtrowane i klastrowane
-8. Zwracane są najlepsze lokalizacje wraz z uzasadnieniem
-9. Wyniki są prezentowane w interfejsie Streamlit + mapa Folium
+   * estimated population based on raster data (GeoTIFF, e.g. WorldPop)
+   * distance to the nearest parcel locker
+   * local locker density (within a 1 km radius)
+6. A score is computed
+7. Data is filtered and clustered
+8. The best locations are returned along with explanations
+9. Results are presented in a Streamlit interface with a Folium map
 
 ---
 
-### Kluczowe decyzje projektowe
+### Key design decisions
 
 #### 1. Expanded Bounding Box
 
-Zamiast analizować tylko granice miasta, system korzysta z powiększonego obszaru przy pobieraniu danych.
+Instead of analyzing only the strict city boundaries, the system uses an expanded area when fetching data.
 
-Dlaczego:
+Why:
 
-* unika błędów na krawędziach (edge effects)
-* uwzględnia paczkomaty tuż poza granicą miasta
+* avoids edge effects
+* includes lockers located just outside the city
 
-To podejście jest standardem w systemach GIS.
-
----
-
-#### 2. Siatka przestrzenna (grid)
-
-Miasto jest reprezentowane jako siatka punktów (~400 m), co zapewnia:
-
-* równomierne pokrycie obszaru
-* kontrolę nad rozdzielczością
-* skalowalność
+This approach is standard in GIS systems.
 
 ---
 
-#### 3. Dane populacyjne z rastra
+#### 2. Spatial grid
 
-Zamiast danych zagregowanych (np. dzielnic), użyto rastra (GeoTIFF):
+The city is represented as a grid of points (~400 m), which ensures:
 
-* większa dokładność przestrzenna
-* brak zależności od granic administracyjnych
-
----
-
-#### 4. Obliczanie odległości (BallTree + Haversine)
-
-Do znajdowania najbliższych paczkomatów użyto:
-
-* BallTree (wydajność)
-* metryki Haversine (dokładność geograficzna)
-
-To pozwala skalować rozwiązanie na duże miasta.
+* uniform spatial coverage
+* control over resolution
+* scalability
 
 ---
 
-#### 5. Gęstość paczkomatów
+#### 3. Population data from raster
 
-Liczba paczkomatów w promieniu 1 km:
+Instead of aggregated data (e.g. districts), raster data (GeoTIFF) is used:
 
-* pozwala wykrywać obszary już dobrze obsłużone
-* wpływa na karanie takich lokalizacji w scoringu
-
+* higher spatial accuracy
+* independence from administrative boundaries
 
 ---
 
-#### 6. Funkcja scoringowa
+#### 4. Distance calculation (BallTree + Haversine)
 
-System wykorzystuje ważoną funkcję scoringową opartą na znormalizowanych cechach:
+To find the nearest lockers, the system uses:
+
+* BallTree (performance)
+* Haversine metric (geographical accuracy)
+
+This allows the solution to scale efficiently to large cities.
+
+---
+
+#### 5. Locker density
+
+The number of lockers within a 1 km radius:
+
+* helps identify already well-served areas
+* penalizes such locations in the scoring process
+
+---
+
+#### 6. Scoring function
+
+The system uses a weighted scoring function based on normalized features:
 
 ```
 score =
@@ -104,79 +102,80 @@ score =
 0.1 × raw_gap_norm
 ```
 
-gdzie:
+where:
 
-* `population_norm` → znormalizowana liczba mieszkańców (potencjalny popyt)
-* `distance_norm` → znormalizowana odległość do najbliższego paczkomatu (im większa, tym większa potrzeba nowego punktu)
-* `raw_gap` → surowy wskaźnik niedosytu infrastruktury:
-
-  ```
-  raw_gap = 1 / (1 + nearby_lockers)
-  ```
-* `raw_gap_norm` → znormalizowana wersja wskaźnika nasycenia
-
-Do normalizacji wszystkich cech używany jest **MinMaxScaler**, co sprowadza wartości do wspólnej skali [0, 1] i umożliwia ich ważenie.
-
-Interpretacja wag:
-
-* **0.65 (population)** → kluczowy czynnik popytowy (najważniejszy biznesowo)
-* **0.25 (distance)** → potencjał lokalizacji wynikający z braku bliskich punktów
-* **0.1 (gap factor)** → korekta uwzględniająca lokalne nasycenie paczkomatami
-
----
-
-#### 7. Filtrowanie kandydatów
-
-Przed końcową selekcją system stosuje warunki filtrujące:
-
-* odległość do najbliższego paczkomatu > 500 m
-* populacja > zadany próg (minimalny poziom aktywności obszaru)
-
-Następnie spośród spełnionych warunków wybierane są najlepsze lokalizacje na podstawie rozkładu score:
+* `population_norm` - normalized population (demand proxy)
+* `distance_norm` - normalized distance to the nearest locker (higher = greater need)
+* `raw_gap` - infrastructure gap indicator:
 
 ```
-top 20% wyników (percentyl 0.8)
+raw_gap = 1 / (1 + nearby_lockers)
 ```
 
-Takie podejście pozwala:
+* `raw_gap_norm` → normalized gap factor
 
-* odrzucić obszary o niskim potencjale użytkowym
-* uniknąć rekomendacji w już dobrze obsłużonych lokalizacjach
-* skupić się na relatywnie najlepszych kandydatów w każdym mieście
+All features are normalized using **MinMaxScaler**, bringing values to the [0, 1] range and enabling weighted combination.
 
----
+Weight interpretation:
 
-#### 8. Klasteryzacja (DBSCAN)
-
-DBSCAN:
-
-* usuwa duplikaty lokalizacji
-* grupuje bliskie punkty
-* nie wymaga określenia liczby klastrów
-
-To lepsze rozwiązanie niż np. k-means w tym przypadku.
+* **0.65 (population)** - primary demand driver
+* **0.25 (distance)** - spatial need for a new location
+* **0.1 (gap factor)** - correction for local saturation
 
 ---
 
-### Interfejs użytkownika
+#### 7. Candidate filtering
 
-Aplikacja zawiera UI w Streamlit:
+Before final selection, the system applies filtering conditions:
 
-* wybór miasta
-* suwak minimalnego score
-* metryki:
+* distance to nearest locker > 500 m
+* population above a defined threshold
 
-  * liczba paczkomatów
-  * liczba rekomendacji
-  * średnia odległość
-* tabela wyników
-* interaktywna mapa
+Then, from the remaining points, the top candidates are selected based on score distribution:
 
-Mapa zawiera:
+```
+top 20% (0.8 quantile)
+```
 
-* 🟢 istniejące paczkomaty
-* 🔴 rekomendacje (skalowane wg score)
-* 🔵 granice miasta
+This approach:
+
+* removes low-value areas
+* avoids already well-served locations
+* focuses on relatively best candidates per city
+
+---
+
+#### 8. Clustering (DBSCAN)
+
+DBSCAN is used to:
+
+* remove duplicate nearby recommendations
+* group spatially close points
+* avoid specifying the number of clusters
+
+This makes it more suitable than k-means in this context.
+
+---
+
+### User interface
+
+The application includes a Streamlit UI with:
+
+* city selection
+* minimum score slider
+* metrics:
+
+  * number of lockers
+  * number of recommendations
+  * average distance
+* results table
+* interactive map
+
+The map includes:
+
+* 🟢 existing lockers
+* 🔴 recommended locations (scaled by score)
+* 🔵 city boundaries
 
 ---
 
@@ -191,41 +190,43 @@ Mapa zawiera:
 #### Mapa wraz z Legendą
 ![Legenda](photos/Map_Legend.png)
 
+
 ---
+
 ## Technologies
 
 * **Python 3.10+**
-* **pandas, numpy** — przetwarzanie danych
-* **requests** — komunikacja z API
+* **pandas, numpy** — data processing
+* **requests** — API communication
 * **scikit-learn**
 
   * BallTree
   * DBSCAN
-* **rasterio** — dane przestrzenne (GeoTIFF)
-* **folium** — wizualizacja map
+* **rasterio** — spatial data (GeoTIFF)
+* **folium** — map visualization
 * **streamlit** — UI
 
-### Uzasadnienie wyboru
+### Why these choices
 
-* BallTree → szybkie zapytania przestrzenne
-* DBSCAN → naturalna klasteryzacja przestrzenna
-* raster → większa dokładność niż dane agregowane
-* Streamlit → szybkie prototypowanie UI
+* BallTree → efficient spatial queries
+* DBSCAN → natural spatial clustering
+* raster → higher accuracy than aggregated data
+* Streamlit → fast UI prototyping
 
 ---
 
 ## How to run
 
-### Wymagania
+### Prerequisites
 
 * Python 3.10+
 * pip
-* plik `population.tif`
-* dostęp do internetu (API)
+* `population.tif` file
+* internet connection (API access)
 
 ---
 
-### Uruchomienie
+### Build & run
 
 ```bash
 git clone <your-repo-url>
@@ -244,25 +245,39 @@ streamlit run app.py
 ---
 
 ## What I would do with more time
-- zastąpienie heurystycznego scoringu modelem uczącym się (np. Gradient Boosting / XGBoost)
-- dostosowanie modelu do warunków miejskich i poza miejsckich ( inne wagi cech )
-- rozszerzenie o większą liczbę miast
-- możliwość sprawdzenia danego obszaru np: kraju, województwa, powiatu, gminy z danych GIS
-- lepszy interfejs użytkownika
-- dodania heatmap pokazujących gęstość zaludnienia i gęstość paczkomatów
-- użycie bardziej dokładnych danych na temat populacji ( obecnie 1km^2 ) 
-- integracja danych kontekstowych (POI, transport, gęstość ruchu) w celu modelowania rzeczywistego popytu i dostępności
-- kalibracja modelu na danych historycznych (np. istniejące lokalizacje i ich wykorzystanie) zamiast ręcznie dobranych wag
+
+* replace heuristic scoring with a learning-based model (e.g. Gradient Boosting / XGBoost)
+* adapt the model to urban vs. rural conditions (different feature weights)
+* extend support to more cities
+* allow analysis for arbitrary regions (country, voivodeship, county, municipality) using GIS data
+* improve the user interface
+* add heatmaps for population density and locker density
+* use higher-resolution population data (currently ~1 km²)
+* integrate contextual data (POI, transport, traffic intensity) to better model demand and accessibility
+* calibrate the model using historical data (e.g. existing locations and their usage) instead of manually defined weights
+
+---
 
 ## AI usage
-Narzędzia AI (ChatGPT) były wykorzystywane jako wsparcie techniczne w trakcie tworzenia projektu.
-Pomogły w:
 
-- dopracowaniu struktury projektu
-- wyjaśnieniu zagadnień geograficznych, w szczególności obliczania odległości (Haversine, praca na radianach)
-- ulepszeniu interfejsu użytkownika w Streamlit i logiki jego działania
+AI tools (ChatGPT) were used as technical support during development.
 
-Wszystkie sugestie zostały zweryfikowane, dostosowane i zaimplementowane ręcznie, aby zapewnić poprawność oraz spójność całego systemu.
+They helped with:
+
+* refining the project structure
+* clarifying geospatial concepts, especially distance calculations (Haversine, radians)
+* improving the Streamlit UI and interaction logic
+
+All suggestions were reviewed, adapted, and implemented manually to ensure correctness and consistency of the system.
+
+---
 
 ## Anything else?
-Moim zdaniem, świetny pomysł na etap rekrutacji. Mam nadzieję że moja inicjatywa się Państwu spodoba. Z niecierpliwością czekam na odpowiedź i o Państwa zdaniu na temat tego projektu. Marzeniem byłoby pracować nad jednym z podobnych rozwiązań w Państwa firmie. Dziękuję za możliwość wykazania się.
+
+In my opinion, this was a great idea for a recruitment task.
+
+I hope my approach and initiative meet your expectations. I would really appreciate your feedback and look forward to your response.
+
+I would be very interested in working on similar data-driven systems during an internship and further developing solutions like this in your organization.
+
+Thank you for the opportunity.
