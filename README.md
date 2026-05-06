@@ -99,8 +99,8 @@ System wykorzystuje ważoną funkcję scoringową opartą na znormalizowanych ce
 
 ```
 score =
-0.8 × population_norm +
-0.1 × distance_norm +
+0.65 × population_norm +
+0.25 × distance_norm +
 0.1 × raw_gap_norm
 ```
 
@@ -119,8 +119,8 @@ Do normalizacji wszystkich cech używany jest **MinMaxScaler**, co sprowadza war
 
 Interpretacja wag:
 
-* **0.8 (population)** → kluczowy czynnik popytowy (najważniejszy biznesowo)
-* **0.1 (distance)** → potencjał lokalizacji wynikający z braku bliskich punktów
+* **0.65 (population)** → kluczowy czynnik popytowy (najważniejszy biznesowo)
+* **0.25 (distance)** → potencjał lokalizacji wynikający z braku bliskich punktów
 * **0.1 (gap factor)** → korekta uwzględniająca lokalne nasycenie paczkomatami
 
 ---
@@ -182,7 +182,8 @@ Mapa zawiera:
 
 ### Demo
 
-*(dodaj screeny lub link do deploya)*
+
+
 
 ---
 
@@ -243,6 +244,8 @@ streamlit run app.py
 - rozszerzenie o większą liczbę miast
 - możliwość sprawdzenia danego obszaru np: kraju, województwa, powiatu, gminy z danych GIS
 - lepszy interfejs użytkownika
+- dodania heatmap pokazujących gęstość zaludnienia i gęstość paczkomatów
+- użycie bardziej dokładnych danych na temat populacji ( obecnie 1km^2 ) 
 - integracja danych kontekstowych (POI, transport, gęstość ruchu) w celu modelowania rzeczywistego popytu i dostępności
 - kalibracja modelu na danych historycznych (np. istniejące lokalizacje i ich wykorzystanie) zamiast ręcznie dobranych wag
 
